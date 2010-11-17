@@ -1,0 +1,2 @@
+demjson
+morbid >= 0.8.7.1
