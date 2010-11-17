@@ -1,0 +1,5 @@
+orbited (0.7.10-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- paul cannon <paul@dijkstra-squeeze.dc9.debconf.org>  Wed, 17 Nov 2010 15:43:41 -0700
