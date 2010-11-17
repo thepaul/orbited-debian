@@ -2,13 +2,13 @@ Source: orbited
 Section: net
 Priority: extra
 Maintainer: paul cannon <pik@debian.org>
-Build-Depends: cdbs, debhelper (>= 7.0.50~), python-support
+Build-Depends: cdbs, debhelper (>= 7.0.50~), python-support (>= 0.6)
 Standards-Version: 3.8.4
 Homepage: http://orbited.org/
 
 Package: orbited
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.5), python-setuptools, python-twisted-core, python-twisted-web, python-demjson | python-cjson | python-simplejson
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-setuptools, python-pkg-resources, python-twisted-core, python-twisted-web, python-demjson | python-cjson | python-simplejson
 Recommends: python-openssl
 Description: Bidirectional bridge from browser (Javascript) to TCP socket
  Orbited provides a pure Javascript/HTML socket in the browser. It is a web
