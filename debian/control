@@ -1,15 +1,24 @@
 Source: orbited
-Section: unknown
+Section: net
 Priority: extra
-Maintainer: paul cannon <paul@dijkstra-squeeze.dc9.debconf.org>
-Build-Depends: cdbs, debhelper (>= 7.0.50~)
+Maintainer: paul cannon <pik@debian.org>
+Build-Depends: cdbs, debhelper (>= 7.0.50~), python-support
 Standards-Version: 3.8.4
-Homepage: <insert the upstream URL, if relevant>
-#Vcs-Git: git://git.debian.org/collab-maint/orbited.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/orbited.git;a=summary
+Homepage: http://orbited.org/
 
 Package: orbited
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.5), python-setuptools, python-twisted-core, python-twisted-web, python-demjson | python-cjson | python-simplejson
+Recommends: python-openssl
+Description: Bidirectional bridge from browser (Javascript) to TCP socket
+ Orbited provides a pure Javascript/HTML socket in the browser. It is a web
+ router and firewall that allows you to integrate web applications with
+ arbitrary back-end systems. You can implement any network protocol in the
+ browser - without resorting to plugins.
+ .
+ Orbited ships with support for many protocols out of the box, including IRC,
+ XMPP, and STOMP (ActiveMQ, RabbitMQ).
+ .
+ It works in all modern browsers, cross-port and cross-subdomain, with no
+ loading bars, clicks, or spurious history entries. It uses only web standards
+ to provide the most future-proof API and implementation.
