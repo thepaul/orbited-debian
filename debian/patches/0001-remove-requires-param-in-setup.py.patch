@@ -1,0 +1,22 @@
+From: paul cannon <paul@riptano.com>
+Date: Thu, 18 Nov 2010 14:53:54 -0700
+Subject: [PATCH] remove requires param in setup.py
+
+we'll address the dependencies more flexibly in debian/control
+---
+ setup.py |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index 6bddf80..de93b79 100644
+--- a/setup.py
++++ b/setup.py
+@@ -30,7 +30,6 @@ try:
+                 static_types ] or [] for (d, s, f) in os.walk(os.path.join('orbited', 'static'))
+             ]) },
+         zip_safe = False,
+-        install_requires = [ "demjson", "morbid >= 0.8.7.1" ],
+         entry_points = '''
+             [console_scripts]
+             orbited = orbited.start:main
+-- 
