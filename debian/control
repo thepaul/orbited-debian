@@ -7,8 +7,8 @@ Standards-Version: 3.9.1
 Homepage: http://orbited.org/
 
 Package: orbited
-Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-setuptools, python-pkg-resources, python-twisted-core, python-twisted-web, python-demjson, python-morbid (>= 0.8.7.1)
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, python-setuptools, python-pkg-resources, python-twisted-core, python-twisted-web, python-demjson | python-cjson | python-simplejson, python-morbid (>= 0.8.7.1)
 Recommends: python-openssl
 Description: Bidirectional bridge from browser (Javascript) to TCP socket
  Orbited provides a pure Javascript/HTML socket in the browser. It is a web
