@@ -6,4 +6,4 @@ DEB_PYTHON_SYSTEM = pysupport
 include /usr/share/cdbs/1/class/python-distutils.mk
 
 install/orbited::
-	cp orbited.cfg $(DEB_DESTDIR)/etc/orbited.cfg.sample
+	cp orbited.cfg.example $(DEB_DESTDIR)/etc/orbited.cfg.example
