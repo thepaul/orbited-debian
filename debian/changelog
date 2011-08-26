@@ -2,7 +2,7 @@ orbited (0.7.11~beta3-1) unstable; urgency=low
 
   * Packaging for 0.7.11beta3.
 
- --  <nick@datastax.com>  Fri, 26 Aug 2011 17:10:29 +0000
+ -- Nick Bailey <nick@datastax.com>  Fri, 26 Aug 2011 17:10:29 +0000
 
 orbited (0.7.10-1) unstable; urgency=low
 

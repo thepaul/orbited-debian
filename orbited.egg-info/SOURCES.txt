@@ -90,7 +90,6 @@ orbited/test/coverage/.coverage
 orbited/test/functional/__init__.py
 orbited/test/functional/test_cross_port_tcp_socket.py
 orbited/test/functional/test_cross_subdomain_tcp_socket.py
-orbited/test/functional/test_firefox_sockets.py~
 orbited/test/functional/test_same_domain_tcp_socket.py
 orbited/test/resources/__init__.py
 orbited/test/resources/orbited-debug.cfg
