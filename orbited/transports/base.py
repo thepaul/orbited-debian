@@ -1,7 +1,10 @@
-from orbited import logging
+import logging
+
 from twisted.web import server, resource
 from twisted.internet import defer, reactor
-logger = logging.get_logger('orbited.transports.base.CometTransport')
+
+logger = logging.getLogger('orbited.transports.base.CometTransport')
+
 class CometTransport(resource.Resource):
     HEARTBEAT_INTERVAL = 5
 
@@ -15,7 +18,7 @@ class CometTransport(resource.Resource):
         self.packets = []
         self.request = request
         self.opened()
-#        self.request.notifiyFinish().addCallback(self.finished)
+        self.request.notifyFinish().addBoth(self.finished)
         self.resetHeartbeat()
         self.closeDeferred = defer.Deferred()
         self.conn.transportOpened(self)
@@ -26,7 +29,7 @@ class CometTransport(resource.Resource):
 
     def doHeartbeat(self):
         if self.closed:
-            logger.debug("don't send hearbeat -- we should be closed", )
+            logger.debug("don't send hearbeat -- we should be closed")
             raise Exception("show tb...")
         else:
             self.writeHeartbeat()
@@ -48,8 +51,12 @@ class CometTransport(resource.Resource):
             self.heartbeatTimer.cancel()
             self.resetHeartbeat()
 
-    # i don't think this is ever called...
     def finished(self, arg):
+        """ Callback and Errback for self.request.notifyFinish.
+            
+            Commonly called because the connection is lost before the response
+            is sent. 
+        """
         logger.debug('finished: %s'%(arg,))
         self.request = None
         self.close()
@@ -63,7 +70,7 @@ class CometTransport(resource.Resource):
             logger.debug('close called - already closed')
             return
         self.closed = True
-        logger.debug('close ', repr(self))
+        logger.debug('close %r', repr(self))
         self.heartbeatTimer.cancel()
         self.heartbeatTimer = None
         self.open = False

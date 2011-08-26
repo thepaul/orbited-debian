@@ -1,12 +1,11 @@
 Metadata-Version: 1.0
 Name: orbited
-Version: 0.7.10
+Version: 0.7.11beta3
 Summary: A browser(javascript)->tcp bridge; Comet is used to emulate TCP connections in the browser; Allows you to connect a web browser directly to an IRC or XMPP server, for instance.
 Home-page: http://www.orbited.org
-Author: Michael Carter
-Author-email: CarterMichael@gmail.com
+Author: Matthew Desmarais
+Author-email: matthew.desmarais@gmail.com
 License: MIT License
-Download-URL: http://www.orbited.org/download
 Description: UNKNOWN
 Platform: UNKNOWN
 Classifier: Development Status :: 4 - Beta

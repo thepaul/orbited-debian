@@ -1,11 +1,12 @@
+import logging
+
 from twisted.internet import reactor
-from orbited import logging
 from orbited.transports.base import CometTransport
 
 
 class LongPollingTransport(CometTransport):
 
-    logger = logging.get_logger('orbited.transports.longpoll.LongPollingTransport')
+    logger = logging.getLogger('orbited.transports.longpoll.LongPollingTransport')
 
     def opened(self):
         self.totalBytes = 0

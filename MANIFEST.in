@@ -1,0 +1,6 @@
+recursive-include orbited *
+include orbited.cfg.example
+include MANIFEST.inc
+include NEWS
+include README.testing
+global-exclude .DS_Store *.hgignore *.hgtags *.pyc

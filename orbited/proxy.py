@@ -1,10 +1,11 @@
+import logging
+
 from twisted.internet import reactor
 from twisted.internet.protocol import ClientCreator
 from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
 
 from orbited import config
-from orbited import logging
 
 ERRORS = {
     'InvalidHandshake': 102,
@@ -22,7 +23,7 @@ class ProxyIncomingProtocol(Protocol):
     the data to a backend server.
     """
 
-    logger = logging.get_logger('orbited.proxy.ProxyIncomingProtocol')
+    logger = logging.getLogger('orbited.proxy.ProxyIncomingProtocol')
 
     def connectionMade(self):
         # TODO: add handshake timer
@@ -40,7 +41,7 @@ class ProxyIncomingProtocol(Protocol):
         # NB: its cometsession.py:TCPConnectionResource that makes sure
         #     we receive whole frames here.
         self.logger.debug('dataReceived: data=%r' % data)
-        self.logger.debug('self.outgoingConn is', self.outgoingConn)
+        self.logger.debug('self.outgoingConn is %r', self.outgoingConn)
 
         if self.outgoingConn:
             # NB: outgoingConn is-a ProxyOutgoingProtocol
@@ -53,7 +54,7 @@ class ProxyIncomingProtocol(Protocol):
                 port = int(port)
                 self.completedHandshake = True
             except:
-                self.logger.error("failed to connect on handshake", tb=True)
+                self.logger.error("failed to connect on handshake")
                 self.transport.write("0" + str(ERRORS['InvalidHandshake']))
                 self.transport.loseConnection()
                 return
@@ -72,7 +73,7 @@ class ProxyIncomingProtocol(Protocol):
                 self.transport.write("0" + str(ERRORS['Unauthorized']))
                 self.transport.loseConnection()
                 return
-            self.logger.access('new connection from %s:%s to %s:%d' % (self.fromHost, self.fromPort, self.toHost, self.toPort))
+            self.logger.info('new connection from %s:%s to %s:%d' % (self.fromHost, self.fromPort, self.toHost, self.toPort))
             self.state = 'connecting'
             client = ClientCreator(reactor, ProxyOutgoingProtocol, self)
             client.connectTCP(host, port).addErrback(self.errorConnection) 
@@ -92,7 +93,7 @@ class ProxyIncomingProtocol(Protocol):
         if self.outgoingConn:
             self.outgoingConn.transport.loseConnection()
         if self.completedHandshake:
-            self.logger.access('connection closed from %s:%s to %s:%s'%(self.fromHost, self.fromPort, self.toHost, self.toPort))
+            self.logger.info('connection closed from %s:%s to %s:%s'%(self.fromHost, self.fromPort, self.toHost, self.toPort))
 
     def outgoingConnectionEstablished(self, outgoingConn):
         if self.state == 'closed':
@@ -104,6 +105,8 @@ class ProxyIncomingProtocol(Protocol):
     def outgoingConnectionLost(self, outgoingConn, reason):
         self.logger.debug("remoteConnectionLost %s" % reason)
         self.transport.loseConnection()
+        # forget about the outgoing protocol so that it can get cleaned up
+        self.outgoingConn = None
 
     def write(self, data):
 #        data = base64.b64encode(data)
@@ -115,7 +118,7 @@ class ProxyOutgoingProtocol(Protocol):
     Handles the protocol between orbited and backend server.
     """
 
-    logger = logging.get_logger('orbited.proxy.ProxyOutgoingProtocol')
+    logger = logging.getLogger('orbited.proxy.ProxyOutgoingProtocol')
 
     def __init__(self, incomingConn):
         # TODO rename this to incomingProtocol

@@ -1,9 +1,10 @@
-from orbited import logging
+import logging
+
 from orbited.transports.base import CometTransport
 
 class PollingTransport(CometTransport):
 
-    logger = logging.get_logger('orbited.transports.poll.PollingTransport')
+    logger = logging.getLogger('orbited.transports.poll.PollingTransport')
 
     def opened(self):
         self.request.setHeader('cache-control', 'no-cache, must-revalidate')

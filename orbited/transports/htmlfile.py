@@ -1,14 +1,14 @@
+import logging
+
 from orbited.util import format_block
 from orbited import json
 from twisted.internet import reactor
-from orbited import logging
 from orbited.transports.base import CometTransport
 from twisted.web import resource
 MAXBYTES = 1048576
-#MAXBYTES = 64 # for testing
 
-from orbited import logging
-logger = logging.get_logger('orbited.transports.htmlfile.HTMLFileTransport')
+logger = logging.getLogger('orbited.transports.htmlfile.HTMLFileTransport')
+
 class HTMLFileTransport(CometTransport):
     initialData = format_block('''
             <html>
