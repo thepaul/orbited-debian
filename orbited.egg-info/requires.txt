@@ -1,2 +1,2 @@
-demjson
-morbid >= 0.8.7.1
+morbid >= 0.8.7.3
+twisted

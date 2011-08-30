@@ -1,10 +1,11 @@
+import logging
+
 from orbited.util import format_block
 from orbited import json
 from twisted.internet import reactor
 from base import CometTransport
 
-from orbited import logging
-logger = logging.get_logger('orbited.transports.sse.SSETransport')
+logger = logging.getLogger('orbited.transports.sse.SSETransport')
 
 class SSETransport(CometTransport):
     HEARTBEAT_INTERVAL = 30

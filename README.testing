@@ -1,0 +1,37 @@
+How to run the orbited functional tests
+=======================================
+
+Prerequisites
+-------------
+* Java must be installed
+* Firefox must be installed
+* The standalone Selenium server jar - this should be available at http://selenium.googlecode.com/files/selenium-server-standalone-2.0a4.jar.
+
+/etc/hosts
+----------
+For the functional tests to work, the /etc/hosts file on the machine running the
+tests must alias the following domains to 127.0.0.1:
+
+* www.orbited 
+* sub.www.orbited 
+* xp.orbited
+
+Test setup
+----------
+
+You will need three terminal sessions to run the tests. The following invocations assume a working directory in the daemon directory of the orbited source.
+
+Terminal 1 - (selenium)
++++++++++++++++++++++++
+
+java -jar /path/to/selenium-server-standalone-2.0a4.jar 
+
+Terminal 2 - (orbited)
+++++++++++++++++++++++
+
+orbited -c orbited/test/resources/orbited-debug.cfg 
+
+Terminal 3 - (nosetests)
+++++++++++++++++++++++++
+
+nosetests

@@ -1,0 +1,72 @@
+# Example Orbited Configuration file
+
+[global]
+reactor=select
+# reactor=kqueue
+# reactor=epoll
+proxy.enabled=1
+session.ping_interval = 40
+session.ping_timeout = 30
+# once the sockets are open, orbited will drop its privileges to this user.
+# user=orbited
+
+[listen]
+http://:8000
+# uncomment to enable SSL on port 8043 using given .key and .crt files
+#https://:8043
+#
+#[ssl]
+#key=orbited.key
+#crt=orbited.crt
+#chain=orbited.chain
+
+[static]
+
+[access]
+localhost:8000 -> irc.freenode.net:6667
+* -> localhost:4747
+
+# new logging configuration using the python stdlib logging.fileConfig
+[loggers]
+keys = root,orbited,orbited_TCPConnectionResource
+
+[handlers]
+keys = console,errors,connections
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = NOTSET
+handlers = console
+
+[logger_orbited]
+level = WARN
+handlers = errors
+qualname = orbited
+
+[logger_orbited_TCPConnectionResource]
+level = DEBUG
+handlers = connections
+qualname = orbited.cometsession.TCPConnectionResource
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = INFO
+formatter = generic
+
+[handler_errors]
+class = FileHandler
+args = ('error.log', 'w')
+level = WARN
+formatter = generic
+
+[handler_connections]
+class = FileHandler
+level = DEBUG
+formatter = generic
+args = ('connections.log', 'w')
+
+[formatter_generic]
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s

@@ -1,12 +1,13 @@
+import logging
+import logging.config
+
 import os
 import sys
 import urlparse
+
 from orbited import __version__ as version
 from orbited import config
-from orbited import logging
-
-# NB: this is set after we load the configuration at "main".
-logger = None
+from orbited.memory_utils import MemoryUtil
 
 def _import(name):
     module_import = name.rsplit('.', 1)[0]
@@ -41,13 +42,20 @@ def main():
     except ImportError:
         print "Orbited requires Twisted, which is not installed. See http://twistedmatrix.com/trac/ for installation instructions."
         sys.exit(1)
-    import platform
-    if platform.system() == "Windows":
-        try:
-            import win32api
-        except ImportError:
-            print "Orbited for Windows requires the Python for Windows Extensions, which are not installed. See http://python.net/crew/mhammond/win32/ for installation instructions."
-            sys.exit(1)
+
+    #################
+    # This corrects a bug in Twisted 8.2.0 for certain Python 2.6 builds on Windows
+    #   Twisted ticket: http://twistedmatrix.com/trac/ticket/3868
+    #     -mario
+    try:
+        from twisted.python import lockfile
+    except ImportError:
+        from orbited import __path__ as orbited_path
+        sys.path.append(os.path.join(orbited_path[0],"hotfixes","win32api"))
+        from twisted.python import lockfile
+        lockfile.kill = None
+    #################
+
     from optparse import OptionParser
     parser = OptionParser()
     parser.add_option(
@@ -81,7 +89,24 @@ def main():
         default=False,
         help="run Orbited on port 8000 and MorbidQ on port 61613"
     )
-
+    parser.add_option( 
+        "-d", 
+        "--daemon", 
+        dest="daemon", 
+        action="store_true", 
+        default=False, 
+        help="run Orbited as a daemon (requires the python-daemon package)"
+        )
+    parser.add_option(
+        "--pid-file",
+        dest="pidfile",
+        default="/var/run/orbited/orbited.pid",
+        help=("use PIDFILE as the orbited daemon pid file",
+              "; defaults to '/var/run/orbited/orbited.pid'"),
+        )
+    
+    MemoryUtil.add_options_to_parser(parser)
+    
     (options, args) = parser.parse_args()
 
     if args:
@@ -91,23 +116,36 @@ def main():
     if options.version:
         print "Orbited version: %s" % (version,)
         sys.exit(0)
-
+    
+    global logger
+    
     if options.quickstart:
+        logging.basicConfig()
+        logger = logging.getLogger(__name__)
         config.map['[listen]'].append('http://:8000')
         config.map['[listen]'].append('stomp://:61613')
         config.map['[access]'][('localhost',61613)] = ['*']
-        print "Quickstarting Orbited"
+        logger.info("Quickstarting Orbited")
     else:
         # load configuration from configuration
         # file and from command line arguments.
         config.setup(options=options)
-
-    logging.setup(config.map)
-
-    # we can now safely get loggers.
-    global logger; logger = logging.get_logger('orbited.start')
-
-
+        logging.config.fileConfig(options.config)
+        logger = logging.getLogger(__name__)
+        logger.info("Starting Orbited with config file %s" % options.config)
+    
+    if options.daemon:
+        try:
+            from daemon import DaemonContext
+            from daemon.pidfile import PIDLockFile
+            pidlock = PIDLockFile(options.pidfile)
+            daemon = DaemonContext(pidfile=pidlock)
+            logger.debug('daemonizing with pid file %r', options.pidfile)
+            daemon.open()
+            logger.debug('daemonized!')
+        except Exception, exc:
+            logger.debug(exc)
+    
     # NB: we need to install the reactor before using twisted.
     reactor_name = config.map['[global]'].get('reactor')
     if reactor_name:
@@ -171,7 +209,12 @@ def main():
         else:
             logger.error('Aborting; You must define a user (and optionally a group) in the configuration file.')
             sys.exit(1)
-
+    
+    if MemoryUtil.manhole_requested(options):
+        memory_util = MemoryUtil(options)
+        memory_util.install(reactor)
+        
+    
     if options.profile:
         import hotshot
         prof = hotshot.Profile("orbited.profile")
@@ -182,6 +225,54 @@ def main():
     else:
         reactor.run()
 
+class URLParseResult(object):
+    """ An object that allows access to urlparse results by index or name.
+        
+        This provides compatibility with python < 2.5 since the record fields
+        were added then.
+        
+        The tuple structure is like:
+        (scheme, netloc, path, params, query, fragment)
+    """
+    parts = ('scheme', 'netloc', 'path', 'params', 'query', 'fragment')
+    
+    @staticmethod
+    def _make_field_getter(self, index):
+        return lambda self: self[index]
+    
+    def __init__(self, result_tuple):
+        self._tuple = result_tuple
+        for index, part in enumerate(self.parts):
+            setattr(self.__class__, part, 
+                    property(self._make_field_getter(self, index)))
+        
+    
+    def __getitem__(self, index):
+        return self._tuple[index]
+    
+    def _split_netloc(self):
+        if ':' in self.netloc:
+            host, port = self.netloc.split(':')
+            port = int(port)
+        else:
+            host = self.netloc
+            port = 80
+        return host, port
+    
+    @property
+    def hostname(self):
+        return self._split_netloc()[0]
+
+    @property
+    def port(self):
+        return self._split_netloc()[1]
+
+def _parse_url(url):
+    """ Parse `url' and return the result as a URLParseResult object.
+    """
+    result = urlparse.urlparse(url)
+    return URLParseResult(result)
+    
 def start_listening(site, config, logger):
     from twisted.internet import reactor
     from twisted.internet import protocol as protocol_module
@@ -193,11 +284,14 @@ def start_listening(site, config, logger):
         urlparse.uses_netloc.append(protocol)
 
     for addr in config['[listen]']:
+        logger.debug(addr)
         if addr.startswith("stomp"):
             stompConfig = ""
             if " " in addr:
                 addr, stompConfig = addr.split(" ",1)
-        url = urlparse.urlparse(addr)
+        url = _parse_url(addr)
+        logger.debug('hostname: %r', url.hostname)
+        logger.debug('port: %r', url.port)
         hostname = url.hostname or ''
         if url.scheme == 'stomp':
             logger.info('Listening stomp@%s' % url.port)
@@ -212,12 +306,15 @@ def start_listening(site, config, logger):
             from twisted.internet import ssl
             crt = config['[ssl]']['crt']
             key = config['[ssl]']['key']
+            chain = config['[ssl]'].get('chain')
             try:
                 ssl_context = ssl.DefaultOpenSSLContextFactory(key, crt)
+                if chain:
+                    ssl_context._context.use_certificate_chain_file(chain)
             except ImportError:
                 raise
-            except:
-                logger.error("Error opening key or crt file: %s, %s" % (key, crt))
+            except Exception, e:
+                logger.error("Error opening key, crt or chain file: %s, %s, %s, %s" % (key, crt, chain, e))
                 sys.exit(1)
             logger.info('Listening https@%s (%s, %s)' % (url.port, key, crt))
             reactor.listenSSL(url.port, site, ssl_context, interface=hostname)
