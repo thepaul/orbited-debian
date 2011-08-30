@@ -1,6 +1,7 @@
+import logging
+
 from twisted.web import resource, error
 from orbited.config import map as config
-from orbited import logging
 import urlparse
 
 class MonitorResource(resource.Resource):

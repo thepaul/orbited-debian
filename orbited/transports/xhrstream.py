@@ -1,12 +1,13 @@
+import logging
+
 #from twisted.internet import reactor
-from orbited import logging
 from orbited.transports.base import CometTransport
 
 MAXBYTES = 1048576
 #MAXBYTES = 64
 class XHRStreamingTransport(CometTransport):
 
-    logger = logging.get_logger('orbited.transports.xhrstream.XHRStreamingTransport')
+    logger = logging.getLogger('orbited.transports.xhrstream.XHRStreamingTransport')
 
     def opened(self):
         self.totalBytes = 0

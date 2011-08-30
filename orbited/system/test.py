@@ -1,6 +1,7 @@
+import logging
+
 from twisted.web import resource, error
 from orbited.config import map as config
-from orbited import logging
 
 class TestResource(resource.Resource):
     def render(self, request):
@@ -16,7 +17,7 @@ class TestResource(resource.Resource):
             return error.NoResource()
 
 class StompDispatcherResource(resource.Resource):
-    logger = logging.get_logger('orbited.system.test.stompdispatcher')
+    logger = logging.getLogger('orbited.system.test.stompdispatcher')
     def render(self, request):
         self.logger.info("request received")
         if config['[test]']['stompdispatcher.enabled'] == '1':

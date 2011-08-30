@@ -1,0 +1,9 @@
+* 0.7.11 (since 0.7.10)
+  - Fixed a memory leak in the ProxyIncomingProtocol. Lots of thanks to Neil Skrypuch for helping locate the problem and test the fix.
+  - Cleaned up the search for an adequate json library
+  - Added some simple Selenium tests; see README.testing for details
+  - Added NEWS
+  - Added daemonization support with python-daemon from TRAC # 157 (Thanks to Luke Macken)
+  - Added support for ssl chained certificates from Trac #138 (Thanks to Paul Querna)
+  - Modified logging to use the Python standard library logging module.
+    This is a BACKWARDS-INCOMPATIBLE CHANGE from 0.7.10.

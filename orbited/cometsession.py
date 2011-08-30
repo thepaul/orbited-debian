@@ -1,6 +1,11 @@
+""" Defines a Port that can be used as a proper Twisted transport
+
+"""
+
+import base64
+import logging
 import os
 import uuid
-import base64
 
 from zope.interface import implements
 from twisted.internet import reactor, interfaces
@@ -9,7 +14,6 @@ from twisted.internet.error import CannotListenError
 from twisted.web import server, resource, static, error
 from twisted.internet import reactor, defer
 
-from orbited import logging
 from orbited import transports
 
 def setup_site(port):
@@ -36,7 +40,7 @@ class Port(object):
     """
     implements(interfaces.IListeningPort)
 
-    logger = logging.get_logger('orbited.cometsession.Port')
+    logger = logging.getLogger('orbited.cometsession.Port')
 
     def __init__(self, port=None, factory=None, backlog=50, interface='', reactor=None, resource=None, childName=None):
         self.port = port
@@ -49,6 +53,10 @@ class Port(object):
         self.listening = False
                 
     def startListening(self):
+        """ Called when the reactor starts; starts the Port listening.
+
+            
+        """
         self.logger.debug('startingListening')
         if not self.listening:
             self.listening = True
@@ -67,7 +75,7 @@ class Port(object):
         else:
             raise CannotListenError("Already listening...")
 
-    def stopListening():
+    def stopListening(self):
         self.logger.debug('stopListening')
         if self.wrapped_port:
             self.listening = False
@@ -94,7 +102,7 @@ class Port(object):
         transportProtocol.parentTransport = transport
         protocol.makeConnection(transport)
         
-    def getHost():
+    def getHost(self):
         if self.wrapped_port:
             return self.wrapped_port.getHost()
         elif self.resource:
@@ -160,9 +168,11 @@ class FakeTCPTransport(object):
     
     
 class TCPConnectionResource(resource.Resource):
+    """ Implements the comet session handling logic.
+    """
     pingTimeout = 30
     pingInterval = 30
-    logger = logging.get_logger('orbited.cometsession.TCPConnectionResource')
+    logger = logging.getLogger('orbited.cometsession.TCPConnectionResource')
 
     def __init__(self, root, key, peer, host, hostHeader, **options):
         resource.Resource.__init__(self)
@@ -208,7 +218,7 @@ class TCPConnectionResource(resource.Resource):
         return None
 
     def connectionLost(self):
-        self.logger.debug('connectionLost... already triggered?', self.lostTriggered)
+        self.logger.debug('connectionLost... already triggered? %r', self.lostTriggered)
         if not self.lostTriggered:
             self.logger.debug('do trigger');
             self.lostTriggered = True
@@ -369,6 +379,7 @@ class TCPConnectionResource(resource.Resource):
 
     def ack(self, ackId):
         self.logger.debug('ack ackId=%s'%(ackId,))
+        self.logger.debug('before ack unackQueue=%r'%self.unackQueue)
         ackId = min(ackId, self.packetId)
         if ackId <= self.lastAckId:
             return
@@ -377,6 +388,7 @@ class TCPConnectionResource(resource.Resource):
             if isinstance(data, TCPClose):
                 # Really close
                 self.close("close acked", True)
+        self.logger.debug('after ack unackQueue=%r'%self.unackQueue)
         self.lastAckId = ackId
 
     def sendMsgQueue(self):
@@ -425,7 +437,7 @@ class TCPOption(object):
         
 class TCPResource(resource.Resource):
     
-    logger = logging.get_logger('orbited.cometsession.TCPResource')
+    logger = logging.getLogger('orbited.cometsession.TCPResource')
   
   
     def __init__(self, listeningPort):
@@ -442,7 +454,7 @@ class TCPResource(resource.Resource):
         hostHeader = request.received_headers.get('host', '')
         self.connections[key] = TCPConnectionResource(self, key, request.client, request.host, hostHeader)
         self.listeningPort.connectionMade(self.connections[key])
-        self.logger.debug('created conn: ', repr(self.connections[key]))
+        self.logger.debug('created conn: %s', repr(self.connections[key]))
         request.setHeader('cache-control', 'no-cache, must-revalidate')
         return key
 
@@ -459,12 +471,17 @@ class TCPResource(resource.Resource):
     def removeConn(self, conn):
         if conn.key in self.connections:
             del self.connections[conn.key]
-
+    
     def connectionMade(self, conn):
         self.listeningPort.connectionMade(conn)
         
         
 if __name__ == "__main__":
+    # Let's illustrate the benefit of using the Port. Here we're using an
+    # implementation of the normal twisted protocol with the comet session
+    # Port. It looks the same way that we would use any protocol with
+    # a TCP port, but the transport is a comet connection and not the
+    # usual TCP connection.
     class EchoProtocol(Protocol):
         
         def dataReceived(self, data):

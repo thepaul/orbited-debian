@@ -1,1 +1,1 @@
-__version__ = "0.7.10"
+from orbited._version import __version__
